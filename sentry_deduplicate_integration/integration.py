@@ -1,4 +1,3 @@
-import os
 import time
 from contextvars import ContextVar
 
@@ -10,12 +9,9 @@ from sentry_sdk.scope import add_global_event_processor
 class SentryDeduplicateIntegration(Integration):
     identifier = "sentry-deduplicate-integration"
 
-    def __init__(self, redis_factory, *, max_events_per_minute=None):
+    def __init__(self, redis_factory, *, max_events_per_minute=10):
         self.redis_factory = redis_factory
         self._ctx = ContextVar("redis-client")
-        
-        if max_events_per_minute is None:
-            max_events_per_minute = int(os.getenv("SENTRY_DEDUPLICATE_MAX_EVENTS_PER_MINUTE", 10))
         self.max_events_per_minute = max_events_per_minute
 
     @property
@@ -39,7 +35,7 @@ class SentryDeduplicateIntegration(Integration):
         if exc_info is None:
             return event
 
-        integration = sentry_sdk.Hub.current.get_integration(SentryDeduplicateIntegration)
+        integration = sentry_sdk.Hub.current.get_integration(cls)
         if integration.should_send(exc_info):
             return event
 
@@ -53,7 +49,7 @@ class SentryDeduplicateIntegration(Integration):
             pipeline.expire(key, 60)
             count, _ = pipeline.execute()
             return int(count) <= self.max_events_per_minute
-        except:
+        except Exception:
             return True
 
 
