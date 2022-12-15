@@ -30,3 +30,6 @@ branch = true
 precision = 2
 skip_covered = true
 show_missing = true
+
+[tool.pytest.ini_options]
+add-opts = "--cov --black --flake8"
