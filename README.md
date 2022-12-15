@@ -43,3 +43,9 @@ sentry_sdk.init(
     ],
 )
 ```
+
+## What about `sentry_sdk.DedupeIntegration`?
+
+The [`DedupeIntegration`](https://docs.sentry.io/platforms/python/configuration/integrations/default-integrations/#deduplication)
+is installed by default and we expected it to work, but just avoid duplications
+when the same error is triggered twice, only the last error is checked for deduplication.
