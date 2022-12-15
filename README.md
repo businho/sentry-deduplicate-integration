@@ -3,6 +3,16 @@
 Sentry integration to rate-limit duplicated errors, using redis to sync error
 count and identify duplications.
 
+## Install
+
+Install it from PyPI:
+
+```bash
+pip install sentry-deduplicate-integration
+```
+
+## Configure
+
 Add the integration to your sentry_sdk initialization.
 
 ```python
