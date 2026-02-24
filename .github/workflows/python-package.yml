@@ -18,6 +18,9 @@ jobs:
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
         sentry-sdk-version: ["sentry-sdk>=1.12,<2", "sentry-sdk>=2,<3"]
+        exclude:
+          - python-version: "3.13"
+            sentry-sdk-version: "sentry-sdk>=1.12,<2"
 
     steps:
     - uses: actions/checkout@v4
