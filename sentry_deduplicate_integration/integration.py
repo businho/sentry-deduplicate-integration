@@ -2,8 +2,10 @@ import time
 from contextvars import ContextVar
 
 import sentry_sdk
+from sentry_sdk import VERSION as SENTRY_VERSION
 from sentry_sdk.integrations import Integration
-from sentry_sdk.scope import add_global_event_processor
+
+_sentry_v2 = int(SENTRY_VERSION.split(".")[0]) >= 2
 
 
 class SentryDeduplicateIntegration(Integration):
@@ -22,12 +24,19 @@ class SentryDeduplicateIntegration(Integration):
             self._ctx.set(client)
         return client
 
-    @classmethod
-    def setup_once(cls):
-        add_global_event_processor(cls.processor)
+    @staticmethod
+    def setup_once():
+        if _sentry_v2:
+            sentry_sdk.get_global_scope().add_event_processor(
+                SentryDeduplicateIntegration._processor
+            )
+        else:
+            from sentry_sdk.scope import add_global_event_processor
 
-    @classmethod
-    def processor(cls, event, hint):
+            add_global_event_processor(SentryDeduplicateIntegration._processor)
+
+    @staticmethod
+    def _processor(event, hint):
         if hint is None:
             return event
 
@@ -35,11 +44,21 @@ class SentryDeduplicateIntegration(Integration):
         if exc_info is None:
             return event
 
-        integration = sentry_sdk.Hub.current.get_integration(cls)
-        if integration.should_send(exc_info):
+        if _sentry_v2:
+            integration = sentry_sdk.get_client().get_integration(
+                SentryDeduplicateIntegration
+            )
+        else:
+            integration = sentry_sdk.Hub.current.get_integration(
+                SentryDeduplicateIntegration
+            )
+
+        if integration is None or integration.should_send(exc_info):
             return event
 
         return None
+
+    processor = _processor
 
     def should_send(self, exc_info):
         key = self._build_key(exc_info)

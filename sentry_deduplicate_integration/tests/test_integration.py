@@ -6,6 +6,7 @@ import redislite
 import sentry_sdk
 
 from sentry_deduplicate_integration import SentryDeduplicateIntegration
+from sentry_deduplicate_integration.integration import _sentry_v2
 
 
 def raise_error_1(integration, expected_send):
@@ -37,8 +38,13 @@ def integration():
 
 @pytest.fixture
 def hub(integration):
-    client = sentry_sdk.Client(integrations=[integration], transport=mock.MagicMock())
-    sentry_sdk.Hub.current.bind_client(client)
+    if _sentry_v2:
+        sentry_sdk.init(integrations=[integration], transport=mock.MagicMock())
+    else:
+        client = sentry_sdk.Client(
+            integrations=[integration], transport=mock.MagicMock()
+        )
+        sentry_sdk.Hub.current.bind_client(client)
     yield
 
 
