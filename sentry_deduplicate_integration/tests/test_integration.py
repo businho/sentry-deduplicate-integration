@@ -2,10 +2,11 @@ import sys
 from unittest import mock
 
 import pytest
-import redislite
+import fakeredis
 import sentry_sdk
 
 from sentry_deduplicate_integration import SentryDeduplicateIntegration
+from sentry_deduplicate_integration.integration import _sentry_v2
 
 
 def raise_error_1(integration, expected_send):
@@ -30,15 +31,20 @@ def assert_should_send(integration, expected):
 @pytest.fixture
 def integration():
     return SentryDeduplicateIntegration(
-        redis_factory=redislite.Redis,
+        redis_factory=fakeredis.FakeRedis,
         max_events_per_minute=1,
     )
 
 
 @pytest.fixture
 def hub(integration):
-    client = sentry_sdk.Client(integrations=[integration], transport=mock.MagicMock())
-    sentry_sdk.Hub.current.bind_client(client)
+    if _sentry_v2:
+        sentry_sdk.init(integrations=[integration], transport=mock.MagicMock())
+    else:
+        client = sentry_sdk.Client(
+            integrations=[integration], transport=mock.MagicMock()
+        )
+        sentry_sdk.Hub.current.bind_client(client)
     yield
 
 

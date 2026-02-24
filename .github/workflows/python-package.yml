@@ -16,20 +16,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        sentry-sdk-version: ["sentry-sdk>=1.12,<2", "sentry-sdk>=2,<3"]
+        exclude:
+          - python-version: "3.13"
+            sentry-sdk-version: "sentry-sdk>=1.12,<2"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install Poetry
       uses: snok/install-poetry@v1
-
     - name: Install dependencies
-      run: |
-        poetry install
+      run: poetry install
+    - name: Install sentry-sdk ${{ matrix.sentry-sdk-version }}
+      run: poetry run pip install "${{ matrix.sentry-sdk-version }}"
     - name: Test with pytest
-      run: |
-        poetry run pytest
+      run: poetry run pytest
