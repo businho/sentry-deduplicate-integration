@@ -2,7 +2,7 @@ import sys
 from unittest import mock
 
 import pytest
-import redislite
+import fakeredis
 import sentry_sdk
 
 from sentry_deduplicate_integration import SentryDeduplicateIntegration
@@ -31,7 +31,7 @@ def assert_should_send(integration, expected):
 @pytest.fixture
 def integration():
     return SentryDeduplicateIntegration(
-        redis_factory=redislite.Redis,
+        redis_factory=fakeredis.FakeRedis,
         max_events_per_minute=1,
     )
 
